@@ -90,11 +90,16 @@ We welcome contributions! To contribute:
 
 1. Fork the repository on [GitHub](https://github.com/nghienp/erlang_etf_parser).
 2. Create a new branch with your feature or bug fix (`git checkout -b feature-branch`).
-3. Commit your changes (`git commit -am 'Add new feature'`).
-4. Push your branch (`git push origin feature-branch`).
-5. Open a Pull Request.
-
-Please ensure your changes include tests and documentation updates as appropriate.
+3. Make sure your branch is up to date with the latest changes from `main`:
+   ```sh
+   git fetch origin
+   git checkout main
+   git pull origin main
+   git checkout -b feature-branch
+   ```
+4. Commit your changes (`git commit -am 'Add new feature'`).
+5. Push your branch (`git push origin feature-branch`).
+6. Open a Pull Request.
 
 ## License
 
