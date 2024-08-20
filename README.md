@@ -14,7 +14,7 @@ To get started, add the following dependency to your `pubspec.yaml` file:
 
 ```yaml
 dependencies:
-  erlang_etf_parser: ^0.0.2
+  erlang_etf_parser: ^0.0.3
 ```
 
 Then, run:
