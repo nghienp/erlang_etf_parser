@@ -1,6 +1,6 @@
 name: erlang_etf_parser
 description: A Dart package to parse Erlang External Term Format (ETF) binary data.
-version: 0.0.1
+version: 0.0.2
 homepage: https://github.com/nghienp/erlang_etf_parser
 repository: https://github.com/nghienp/erlang_etf_parser.git
 environment:
