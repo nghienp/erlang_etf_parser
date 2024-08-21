@@ -4,7 +4,9 @@ import 'dart:typed_data';
 /// A Dart parser for Erlang External Term Format (ETF) binary data.
 ///
 /// This parser allows you to decode ETF binary data into Dart's native
-/// data structures such as integers, strings, lists, and maps.
+/// data structures such as integers, strings, lists, and maps. The parser
+/// also provides a method to attempt parsing as a UTF-8 string if the data
+/// does not match the expected ETF format.
 class ErlangETFParser {
   /// The underlying binary data to be parsed.
   final ByteData _data;
@@ -25,12 +27,32 @@ class ErlangETFParser {
   dynamic parse() {
     int version = _readUint8();
     if (version != 131) {
-      throw Exception('Unsupported ETF version');
+      throw Exception('Unsupported ETF version: $version');
+    }
+    return _parseTerm();
+  }
+
+  /// Attempts to parse the data as ETF, and if unsuccessful, tries to decode
+  /// it as a UTF-8 string.
+  ///
+  /// Returns the parsed Dart object or a UTF-8 decoded string.
+  ///
+  /// Throws an [Exception] if the data cannot be parsed or decoded.
+  dynamic tryParse() {
+    int version = _readUint8();
+    if (version != 131) {
+      try {
+        return utf8.decode(_data.buffer.asUint8List());
+      } catch (e) {
+        throw Exception('Cannot parse data: ${e.toString()}');
+      }
     }
     return _parseTerm();
   }
 
   /// Parses a single term from the binary data based on its type tag.
+  ///
+  /// Throws an [Exception] if the term type tag is unsupported.
   dynamic _parseTerm() {
     int tag = _readUint8();
 
@@ -58,7 +80,7 @@ class ErlangETFParser {
       case 105: // LARGE_TUPLE_EXT
         return _readLargeTuple();
       default:
-        throw Exception('Unsupported term type $tag');
+        throw Exception('Unsupported term type: $tag');
     }
   }
 
@@ -66,6 +88,8 @@ class ErlangETFParser {
   ///
   /// The map is represented as a collection of key-value pairs.
   /// Each key-value pair is parsed recursively by [_parseTerm].
+  ///
+  /// Returns a Dart [Map] representing the parsed data.
   Map<dynamic, dynamic> _readMap() {
     int length = _readUint32(); // Number of key-value pairs
     Map<dynamic, dynamic> map = {};
@@ -79,7 +103,9 @@ class ErlangETFParser {
 
   /// Reads an atom from the binary data.
   ///
-  /// Returns the atom as a UTF-8 encoded string.
+  /// An atom is a unique identifier in Erlang and is returned as a UTF-8 encoded string.
+  ///
+  /// Returns a [String] representing the parsed atom.
   String _readAtom() {
     int len = _readUint16();
     List<int> charCodes = _readBytes(len);
@@ -90,6 +116,8 @@ class ErlangETFParser {
   ///
   /// A small tuple can contain up to 255 elements. Each element is
   /// parsed recursively by [_parseTerm].
+  ///
+  /// Returns a [List] representing the parsed tuple.
   List<dynamic> _readSmallTuple() {
     int arity = _readUint8();
     List<dynamic> elements = [];
@@ -103,6 +131,8 @@ class ErlangETFParser {
   ///
   /// A large tuple contains more than 255 elements. Each element is
   /// parsed recursively by [_parseTerm].
+  ///
+  /// Returns a [List] representing the parsed tuple.
   List<dynamic> _readLargeTuple() {
     int arity = _readUint32();
     List<dynamic> elements = [];
@@ -115,12 +145,16 @@ class ErlangETFParser {
   /// Reads a string from the binary data.
   ///
   /// The string is returned as a UTF-8 decoded [String].
+  ///
+  /// Returns a [String] representing the parsed data.
   String _readString() {
     int len = _readUint16();
     return utf8.decode(_readBytes(len));
   }
 
   /// Reads a double-precision floating-point number from the binary data.
+  ///
+  /// Returns a [double] representing the parsed data.
   double _readDouble() {
     double value = _data.getFloat64(_offset, Endian.big);
     _offset += 8;
@@ -132,6 +166,8 @@ class ErlangETFParser {
   /// The list may contain a variety of data types, all of which are
   /// parsed according to their respective type tags. The list ends
   /// with a NIL_EXT, which is discarded.
+  ///
+  /// Returns a [List] representing the parsed data.
   List<dynamic> _readList() {
     int length = _readUint32();
     List<dynamic> elements = [];
@@ -145,6 +181,8 @@ class ErlangETFParser {
   /// Parses a binary field from the binary data into a string.
   ///
   /// This method reads the binary data as UTF-8 encoded characters.
+  ///
+  /// Returns a [String] representing the parsed binary data.
   String _parseBinaryToString() {
     int len = _readUint32();
     List<int> charCodes = _readBytes(len);
@@ -152,11 +190,15 @@ class ErlangETFParser {
   }
 
   /// Reads an 8-bit unsigned integer from the binary data.
+  ///
+  /// Returns an [int] representing the parsed data.
   int _readUint8() {
     return _data.getUint8(_offset++);
   }
 
   /// Reads a 16-bit unsigned integer from the binary data.
+  ///
+  /// Returns an [int] representing the parsed data.
   int _readUint16() {
     int value = _data.getUint16(_offset, Endian.big);
     _offset += 2;
@@ -164,6 +206,8 @@ class ErlangETFParser {
   }
 
   /// Reads a 32-bit unsigned integer from the binary data.
+  ///
+  /// Returns an [int] representing the parsed data.
   int _readUint32() {
     int value = _data.getUint32(_offset, Endian.big);
     _offset += 4;
@@ -171,6 +215,10 @@ class ErlangETFParser {
   }
 
   /// Reads a sequence of bytes from the binary data.
+  ///
+  /// [length] specifies the number of bytes to read.
+  ///
+  /// Returns a [List<int>] containing the parsed bytes.
   List<int> _readBytes(int length) {
     List<int> bytes = _data.buffer.asUint8List(_offset, length);
     _offset += length;

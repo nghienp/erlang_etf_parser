@@ -9,3 +9,7 @@
 ## 0.0.3
 
 - Update document
+
+- ## 0.0.4
+
+- Add tryParse function

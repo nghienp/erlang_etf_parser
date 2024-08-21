@@ -14,7 +14,7 @@ To get started, add the following dependency to your `pubspec.yaml` file:
 
 ```yaml
 dependencies:
-  erlang_etf_parser: ^0.0.3
+  erlang_etf_parser: ^0.0.4
 ```
 
 Then, run:
@@ -67,7 +67,7 @@ This code will parse the provided ETF binary data and convert it into a Dart obj
     "code": "some_code",
     "id": "some_id",
     "sell_1": "some_sell_value",
-    "step": "some_step_value",
+    "step": "some_step_value"
   }
 }
 ```
